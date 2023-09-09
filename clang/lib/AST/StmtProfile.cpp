@@ -1333,7 +1333,15 @@ void StmtProfiler::VisitPredefinedExpr(const PredefinedExpr *S) {
 void StmtProfiler::VisitIntegerLiteral(const IntegerLiteral *S) {
   VisitExpr(S);
   S->getValue().Profile(ID);
-  ID.AddInteger(S->getType()->castAs<BuiltinType>()->getKind());
+
+  int FoldingSetID = 0;
+
+  if (S->getType()->isBitIntType())
+    FoldingSetID = S->getValue().getSExtValue();
+  else
+    FoldingSetID = S->getType()->castAs<BuiltinType>()->getKind();
+
+  ID.AddInteger(FoldingSetID);
 }
 
 void StmtProfiler::VisitFixedPointLiteral(const FixedPointLiteral *S) {
