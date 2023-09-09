@@ -598,6 +598,12 @@ SVal SValBuilder::evalIntegralCast(ProgramStateRef state, SVal val,
   APSIntType ToType(getContext().getTypeSize(castTy),
                     castTy->isUnsignedIntegerType());
   llvm::APSInt ToTypeMax = ToType.getMaxValue();
+  // With the introduction of _BitInt(), integral types can be
+  // > 64 bits. So check for this and skip the size checks
+  // falling back to making a non loc return type.
+  if (ToTypeMax.getSignificantBits() > 64) {
+    return makeNonLoc(se, originalTy, castTy);
+  }
   NonLoc ToTypeMaxVal =
       makeIntVal(ToTypeMax.isUnsigned() ? ToTypeMax.getZExtValue()
                                         : ToTypeMax.getSExtValue(),
